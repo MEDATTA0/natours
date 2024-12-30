@@ -1,26 +1,21 @@
 import nodemailer from "nodemailer";
+import { MailtrapClient, MailtrapTransport } from "mailtrap";
 
 const sendEmail = async (options) => {
   // 1) Create a transporter
-  // Looking to send emails in production? Check out our Email API/SMTP product!
-  // console.log(process.env.EMAIL_PORT);
-  // const transport = nodemailer.createTransport({
-  //   host: process.env.EMAIL_HOST,
-  //   port: process.env.EMAIL_PORT,
-  //   auth: {
-  //     user: process.env.EMAIL_USER,
-  //     pass: process.env.EMAIL_PASSWORD,
-  //   },
-  // });
-  // Looking to send emails in production? Check out our Email API/SMTP product!
+  // // Looking to send emails in production? Check out our Email API/SMTP product!
   const transport = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: "2525",
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
     auth: {
-      user: "f2e844d789168c",
-      pass: "1ea1001c3e31dc",
+      user: process.env.SMTP_USERNAME,
+      pass: process.env.SMTP_PASSWORD,
     },
   });
+
+  // const transport = nodemailer.createTransport(
+  //   MailtrapTransport({ token: process.env.SMTP_TOKEN })
+  // );
 
   // 2) Define the email options
   const mailOptions = {
