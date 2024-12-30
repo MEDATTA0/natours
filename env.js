@@ -8,5 +8,4 @@ const envFile =
     : "./config/.env.development";
 
 configDotenv({ path: envFile });
-// console.log(process.env);
 console.log(`environment: ${environment}`);

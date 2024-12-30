@@ -1,4 +1,9 @@
 class AppError extends Error {
+  /**
+   * Create a new error that is going to send to the client
+   * @param {String} message
+   * @param {Number} statusCode
+   */
   constructor(message, statusCode) {
     super(message);
 
