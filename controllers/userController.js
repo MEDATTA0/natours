@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { deleteOne, getAll, getOne, updateOne } from "./handlerFactory.js";
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -10,22 +11,33 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-export const getAllUsers = catchAsync(
-  /**
-   *
-   * @param {import("express").Request} req
-   * @param {import("express").Response} res
-   */
-  async (req, res) => {
-    const users = await User.find();
-    // SEND RESPONSE
-    res.status(200).json({
-      status: "success",
-      results: users.length,
-      data: { users },
-    });
-  }
-);
+// export const getAllUsers = catchAsync(
+//   /**
+//    *
+//    * @param {import("express").Request} req
+//    * @param {import("express").Response} res
+//    */
+//   async (req, res) => {
+//     const users = await User.find();
+//     // SEND RESPONSE
+//     res.status(200).json({
+//       status: "success",
+//       results: users.length,
+//       data: { users },
+//     });
+//   }
+// );
+
+/**
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+export const getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
 
 export const updateMe = catchAsync(
   /**
@@ -81,30 +93,16 @@ export const deleteMe = catchAsync(
   }
 );
 
-export const getUser = (req, res) => {
-  res.status(500).json({
-    status: "error",
-    message: "This route is not yet defined.",
-  });
-};
-
 export const createUser = (req, res) => {
   res.status(500).json({
     status: "error",
-    message: "This route is not yet defined.",
+    message: "This route is not defined. Please use /signup instead.",
   });
 };
 
-export const updateUser = (req, res) => {
-  res.status(500).json({
-    status: "error",
-    message: "This route is not yet defined.",
-  });
-};
+export const getAllUsers = getAll(User);
+export const getUser = getOne(User);
 
-export const deleteUser = (req, res) => {
-  res.status(500).json({
-    status: "error",
-    message: "This route is not yet defined.",
-  });
-};
+// Do NOT update passwords with this!
+export const updateUser = updateOne(User);
+export const deleteUser = deleteOne(User);

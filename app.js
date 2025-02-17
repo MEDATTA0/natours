@@ -1,19 +1,72 @@
 import express from "express";
 import morgan from "morgan";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import ExpressMongoSanitize from "express-mongo-sanitize";
+
+import sanitizeMiddleware from "./middlewares/sanitizeMiddleware.js";
 import tourRouter from "./routes/tourRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+import reviewRouter from "./routes/reviewRoutes.js";
 import AppError from "./utils/appError.js";
 import { globalErrorHandler } from "./controllers/errorController.js";
+import hpp from "hpp";
 
 const app = express();
 
 // 1) MIDDLEWARES
+// Set security HTTP Headers
+app.use(helmet());
+
+// Development logging
 // eslint-disable-next-line no-undef
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.use(express.json());
+// Limit requests from same API
+const limiter = rateLimit({
+  limit: 100,
+  windowMs: 60 * 60 * 1000,
+  message: "Too many requests from this IP, please try again in an hour",
+});
+app.use("/api", limiter);
+
+// Body parser, reading data from the body into req.body
+app.use(express.json({ limit: "10kb" }));
+
+// app.use(
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'"],
+//     },
+//   })
+// );
+
+// Data sanitization against NoSQL query injection
+app.use(ExpressMongoSanitize());
+
+// xss-clean package is deprecated, so you have to install sanitize-html package and
+// create your own sanitizer
+// Data sanitization against XSS
+app.use(sanitizeMiddleware);
+
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      "duration",
+      "ratingsQuantity",
+      "ratingsAverage",
+      "maxGroupSize",
+      "difficulty",
+      "price",
+    ],
+  })
+);
+
+// Serving static files
 app.use(
   // eslint-disable-next-line no-undef
   express.static(`${process.cwd()}/public`, {
@@ -22,6 +75,8 @@ app.use(
     maxAge: "1d",
   })
 );
+
+// Test middleware
 app.use((req, res, next) => {
   console.log("Hello from the middleware");
   next();
@@ -35,6 +90,7 @@ app.use((req, res, next) => {
 // 3) ROUTES
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 app.all("*", (req, res, next) => {
   // const err = new Error(`Can't find ${req.originalUrl} on this server!`);

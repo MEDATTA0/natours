@@ -19,6 +19,35 @@ const signToken = (id) => {
   });
 };
 
+/**
+ *
+ * @param {import("../models/userModel.js").User} user
+ * @param {Number} statusCode
+ * @param {import("express").Response} res
+ */
+const createAndSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  // Remove the password from the output
+  user.password = undefined;
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
+
+  res.cookie("jwt", token, cookieOptions);
+  return res.status(statusCode).json({
+    status: "success",
+    data: {
+      user,
+    },
+    token,
+  });
+};
+
 export const signup = catchAsync(
   /**
    *
@@ -44,14 +73,7 @@ export const signup = catchAsync(
       passwordChangedAt,
     });
 
-    const token = signToken(newUser._id);
-    return res.status(201).json({
-      status: "success",
-      data: {
-        user: newUser,
-        token,
-      },
-    });
+    return createAndSendToken(newUser, 201, res);
   }
 );
 
@@ -78,11 +100,7 @@ export const login = catchAsync(
     }
 
     // 3) If everything ok, send token to the client
-    const token = signToken(user._id);
-    return res.status(200).json({
-      status: "success",
-      token,
-    });
+    return createAndSendToken(user, 200, res);
   }
 );
 
@@ -138,7 +156,8 @@ export const protect = catchAsync(
 
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
-    // roles ["admin", "lead-guide"]. roles="user"
+    // roles ["admin", "lead-guide"]. roles!=="user"
+    // console.log(req.user);
     if (!roles.includes(req.user.role)) {
       return next(new AppError("You do not have to perform this action", 401));
     }
@@ -178,6 +197,7 @@ export const forgotPassword = catchAsync(
         message: "Token sent to email",
       });
     } catch (err) {
+      console.log(err);
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
       await user.save({ validateBeforeSave: false });
@@ -222,11 +242,7 @@ export const resetPassword = catchAsync(
 
     // 3) Update changedPasswordAt property for the user
     // 4) Log the user in, send JWT
-    const token = signToken(user._id);
-    return res.status(200).json({
-      status: "success",
-      token,
-    });
+    return createAndSendToken(user, 200, res);
   }
 );
 
@@ -258,10 +274,6 @@ export const updatePassword = catchAsync(
     await user.save();
     // User.findByIdAndUpdate will NOT work as intended!
     // 4) Log user in, send JWT
-    const token = signToken(user._id);
-    return res.status(200).json({
-      status: "success",
-      token,
-    });
+    return createAndSendToken(user, 200, res);
   }
 );
