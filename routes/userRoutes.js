@@ -6,12 +6,15 @@ import {
   getAllUsers,
   getMe,
   getUser,
+  resizeUserPhoto,
   updateMe,
   updateUser,
+  uploadUserPhoto,
 } from "../controllers/userController.js";
 import {
   forgotPassword,
   login,
+  logout,
   protect,
   resetPassword,
   restrictTo,
@@ -23,6 +26,7 @@ const router = Router();
 
 router.post("/signup", signup);
 router.post("/login", login);
+router.get("/logout", protect, logout);
 router.post("/forgotPassword", forgotPassword);
 router.patch("/resetPassword/:token", resetPassword);
 
@@ -30,7 +34,7 @@ router.patch("/resetPassword/:token", resetPassword);
 router.use(protect);
 
 router.get("/me", getMe, getUser);
-router.patch("/updateMe", updateMe);
+router.patch("/updateMe", uploadUserPhoto, resizeUserPhoto, updateMe);
 router.patch("/updateMyPassword", updatePassword);
 router.delete("/deleteMe", deleteMe);
 

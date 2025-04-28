@@ -1,0 +1,128 @@
+//- Extends the base layout
+extends base
+
+//- Includes the reusable review card component
+include _reviewCard
+
+//- Appends necessary scripts and stylesheets for this specific page to the head block defined in base.pug
+block append head
+  //- Mapbox GL JS library script (required for map functionality)
+  script(src="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.js")
+  //- script(src="https://js.stripe.com/v3")
+  //- Mapbox GL JS stylesheet (required for map styling)
+  link(href="https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.css" rel="stylesheet")
+  //- script(src="/js/stripe.js") 
+
+  //- Removed CSP meta tag: Content Security Policy should be handled via HTTP headers (set in viewController.js or app.js) for better security and control.
+  //- The header set in viewController.js for this route already includes the necessary directives for Mapbox.
+
+//- Defines a reusable mixin for overview boxes
+mixin overviewBox(label, text, icon)
+  .overview-box__detail
+    svg.overview-box__icon
+      //- Use xlink:href for older browser compatibility with SVG sprites, though href is standard now. Sticking with xlink:href as it was used.
+      use(xlink:href=`/img/icons.svg#icon-${icon}`)
+    span.overview-box__label= label
+    span.overview-box__text= text
+
+//- Overrides the content block defined in base.pug
+block content
+  section.section-header
+    .header__hero
+      .header__hero-overlay &nbsp;
+      //- Use tour name in alt text for better accessibility
+      img.header__hero-img(src=`/img/tours/${tour.imageCover}`, alt=`${tour.name}`)
+
+    .heading-box
+      h1.heading-primary
+        //- Use template literal for consistency
+        span= `${tour.name} tour`
+      .heading-box__group
+        .heading-box__detail
+          svg.heading-box__icon
+            use(xlink:href='/img/icons.svg#icon-clock')
+          span.heading-box__text= `${tour.duration} days`
+        .heading-box__detail
+          svg.heading-box__icon
+            use(xlink:href='/img/icons.svg#icon-map-pin')
+          //- Ensure startLocation and its description exist
+          span.heading-box__text= tour.startLocation ? tour.startLocation.description : 'Not specified'
+
+  section.section-description
+    .overview-box
+      div
+        .overview-box__group
+          h2.heading-secondary.ma-bt-lg Quick facts
+
+          //- Safely access the first start date and format it
+          - const nextDate = tour.startDates && tour.startDates.length > 0 ? tour.startDates[0].toLocaleString('en-us', {month: 'long', year: 'numeric'}) : 'Not scheduled'
+          +overviewBox('Next date', nextDate, 'calendar')
+          +overviewBox('Difficulty', tour.difficulty, 'trending-up')
+          +overviewBox('Participants', `${tour.maxGroupSize} people`, 'user')
+          //- Display ratingsAverage, ensure it exists
+          +overviewBox('Rating', `${tour.ratingsAverage ? tour.ratingsAverage.toFixed(1) : 'Not rated'} / 5`, 'star')
+
+        .overview-box__group
+          h2.heading-secondary.ma-bt-lg Your tour guides
+
+          //- Iterate over guides, ensure tour.guides exists and is an array
+          each guide in tour.guides || []
+            .overview-box__detail
+              //- Add alt text for guide photos
+              img.overview-box__img(src=`/img/users/${guide.photo}`, alt=`Photo of ${guide.name}`)
+
+              //- Display role based on guide object property
+              - let roleLabel = 'Guide' // Default role label
+              - if (guide.role === 'lead-guide') roleLabel = 'Lead guide'
+              - else if (guide.role === 'guide') roleLabel = 'Tour guide' // Explicitly check for 'guide' if needed, otherwise default is fine
+              span.overview-box__label= roleLabel
+              span.overview-box__text= guide.name
+
+    .description-box
+      h2.heading-secondary.ma-bt-lg= `About the ${tour.name} tour`
+      //- Split description into paragraphs, handle potential undefined description
+      - const paragraphs = tour.description ? tour.description.split('\n') : [];
+      each p in paragraphs
+        //- Ensure paragraph isn't empty before rendering
+        if p
+          p.description__text= p
+
+  section.section-pictures
+    //- Iterate over images, ensure tour.images exists and is an array
+    each img, i in tour.images || []
+      .picture-box
+        //- Use more descriptive alt text
+        img.picture-box__img(src=`/img/tours/${img}`, alt=`${tour.name} tour scene ${i + 1}`, class=`picture-box__img--${i + 1}`)
+
+  section.section-map
+    //- Map container, data-locations attribute holds stringified JSON for mapbox.js
+    //- Ensure tour.locations exists and is an array before stringifying
+    #map(data-locations=`${JSON.stringify(tour.locations || [])}`)
+
+  section.section-reviews
+    .reviews
+      //- Iterate over reviews, ensure tour.reviews exists and is an array
+      each review in tour.reviews || []
+        //- Use the included reviewCard component
+        +reviewCard(review)
+
+  section.section-cta
+    .cta
+      .cta__img.cta__img--logo
+        img(src='/img/logo-white.png', alt='Natours logo')
+      //- Safely access images, provide fallback or handle potential errors if images array is too short
+      img.cta__img.cta__img--1(src=`/img/tours/${(tour.images && tour.images.length > 1) ? tour.images[1] : 'default.jpg'}`, alt='Tour picture 1')
+      img.cta__img.cta__img--2(src=`/img/tours/${(tour.images && tour.images.length > 2) ? tour.images[2] : 'default.jpg'}`, alt='Tour picture 2')
+      .cta__content
+        h2.heading-secondary What are you waiting for?
+        p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
+        //- This button likely requires client-side JS for booking functionality (e.g., Stripe integration)
+        //- Consider adding an ID or class if needed for JS targeting
+        if user 
+          button.btn.btn--green.span-all-rows#book-tour(data-tour-id=`${tour.id}`) Book tour now!
+        else 
+          a.btn.btn--green.span-all-rows(href="/login") Log in to book tour
+  //- Removed commented-out script includes for /js/mapbox.js.
+  //- Ensure mapbox.js (which initializes the map using the Mapbox GL JS library loaded in the head)
+  //- is loaded correctly, either via base.pug or a JavaScript bundler output (e.g., bundle.js).
+  //- script(src="/js/stripe.js") 

@@ -3,27 +3,47 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import ExpressMongoSanitize from "express-mongo-sanitize";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 
-import sanitizeMiddleware from "./middlewares/sanitizeMiddleware.js";
 import tourRouter from "./routes/tourRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import reviewRouter from "./routes/reviewRoutes.js";
+import viewRouter from "./routes/viewRoutes.js";
+import bookingRouter from "./routes/bookingRoutes.js";
 import AppError from "./utils/appError.js";
+
+import sanitizeMiddleware from "./middlewares/sanitizeMiddleware.js";
 import { globalErrorHandler } from "./controllers/errorController.js";
 import hpp from "hpp";
 
 const app = express();
 
+// Setting the view template
+app.set("view engine", "pug");
+app.set("views", `${process.cwd()}/views`);
+
+// Serving static files
+app.use(
+  // eslint-disable-next-line no-undef
+  express.static(`${process.cwd()}/public`, {
+    dotfiles: "ignore",
+    etag: true,
+    maxAge: "1d",
+  })
+);
+
 // 1) MIDDLEWARES
 // Set security HTTP Headers
+// app.use(helmet());
 app.use(helmet());
-
 // Development logging
 // eslint-disable-next-line no-undef
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 // Limit requests from same API
 const limiter = rateLimit({
   limit: 100,
@@ -34,15 +54,8 @@ app.use("/api", limiter);
 
 // Body parser, reading data from the body into req.body
 app.use(express.json({ limit: "10kb" }));
-
-// app.use(
-//   helmet.contentSecurityPolicy({
-//     directives: {
-//       defaultSrc: ["'self'"],
-//       scriptSrc: ["'self'"],
-//     },
-//   })
-// );
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(cookieParser());
 
 // Data sanitization against NoSQL query injection
 app.use(ExpressMongoSanitize());
@@ -66,16 +79,6 @@ app.use(
   })
 );
 
-// Serving static files
-app.use(
-  // eslint-disable-next-line no-undef
-  express.static(`${process.cwd()}/public`, {
-    dotfiles: "ignore",
-    etag: true,
-    maxAge: "1d",
-  })
-);
-
 // Test middleware
 app.use((req, res, next) => {
   console.log("Hello from the middleware");
@@ -88,9 +91,11 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
+app.use("/", viewRouter);
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/bookings", bookingRouter);
 
 app.all("*", (req, res, next) => {
   // const err = new Error(`Can't find ${req.originalUrl} on this server!`);

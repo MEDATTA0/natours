@@ -1,0 +1,54 @@
+doctype html
+html
+  head
+    block head
+      meta(charset='UTF-8')
+      //- Removed CSP meta tag: It's better practice to set CSP via HTTP headers (e.g., using Helmet in app.js or directly in route handlers like viewController.js)
+      //- for better control and consistency. The necessary directives (like worker-src) should be included there.
+      //- meta(http-equiv="Content-Security-Policy" content="worker-src 'self' blob:")
+      meta(name='viewport' content='width=device-width, initial-scale=1.0')
+      link(rel='stylesheet' href='/css/style.css')
+      //- link(rel='shortcut icon' type='image/png' href='/img/favicon.png')
+      //- Consider preconnecting or preloading fonts for performance
+      link(rel='preconnect' href='https://fonts.googleapis.com')
+      link(rel='preconnect' href='https://fonts.gstatic.com' crossorigin)
+      link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lato:300,300i,700&display=swap')
+      title Natours | #{title}
+
+  body(data-email=user ? user.email : '') 
+    //- Optional: Add user email as data attribute if needed by client-side JS globally
+    // HEADER
+    //- Ensure _header.pug exists and contains the header markup
+    include _header
+
+    // CONTENT
+    //- Main content block to be overridden by extending templates
+    block content
+      h1 This is a placeholder heading // This will be replaced by content in child templates
+
+    // FOOTER
+    //- Ensure _footer.pug exists and contains the footer markup
+    include _footer
+
+    //- SCRIPTS
+    //- Load scripts at the end of the body for better performance
+
+    //- Axios (Example - uncomment if needed globally, otherwise include in specific page bundles/scripts)
+    //- script(src='https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js' integrity='sha512-PJa3oQSLWRB7wHZ7GQ/g+qyv6r4mbuhmiDb8BjSFZ8NZ2a42oTtAq5n0ucWAwcQDlikAtkub+tPVCw4np27WCg==' crossorigin='anonymous' referrerpolicy='no-referrer')
+    //- Mapbox Script (Consider moving this to tour.pug if only used there, or keep here if used on multiple pages like overview)
+    //- If using a bundler (like Webpack/Parcel) to create bundle.js, this might be included there instead.
+    //- script(src='/js/mapbox.js')
+
+    //- Login/Signup Logic (Example - uncomment if needed globally, otherwise include in specific page bundles/scripts)
+    //- script(src='/js/login.js')
+
+    //- Bundled JavaScript (Uncomment if using a bundler like Webpack/Parcel)
+    //- If using a bundle, you might not need to load mapbox.js or login.js separately above.
+    //- script(src='/js/bundle.js')
+    script(src="https://js.stripe.com/v3/")
+    script(src="/bundle.js")
+
+    //- Alert Script (Assuming showAlert is defined here or in a bundle)
+    //- This seems to be missing based on other files, ensure showAlert is defined somewhere accessible.
+    //- Example: script(src='/js/alert.js')
+    
