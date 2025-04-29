@@ -85,14 +85,14 @@ reviewSchema.post("save", function () {
 
 reviewSchema.pre(/^findOneAnd/, async function (next) {
   this.r = await this.clone().findOne();
-  console.log(this);
+  // console.log(this);
   next();
 });
 
 reviewSchema.post(/^findOneAnd/, async function () {
   // await this.clone().findOne(); does NOT work here, query has already executed
   await this.r.constructor.calcAverageRatings(this.r.tour);
-  console.log(this);
+  // console.log(this);
 });
 
 const Review = mongoose.model("Review", reviewSchema);

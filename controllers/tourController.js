@@ -271,7 +271,7 @@ export const getTourWithin = catchAsync(
     const [latitude, longitude] = latlng.split(",");
 
     const radius = distance / (unit === "mi" ? 3963.2 : 6378.1);
-    console.log(radius);
+    // console.log(radius);
 
     if (!latitude || !longitude)
       next(

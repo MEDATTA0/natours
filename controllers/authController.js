@@ -51,7 +51,7 @@ export const signup = catchAsync(
       passwordConfirm: req.body.passwordConfirm,
     });
     const url = `${req.protocol}://${req.get("host")}/me`;
-    console.log(url);
+    // console.log(url);
 
     try {
       await new Email(newUser, url).sendWelcome();
@@ -72,7 +72,6 @@ export const login = catchAsync(
    */
   async (req, res, next) => {
     const { email, password } = req.body;
-    console.log(email, password);
 
     // 1) Check if email and password exist
     if (!email || !password) {

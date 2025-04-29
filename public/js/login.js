@@ -5,13 +5,13 @@ import { showAlert } from "./alerts.js";
 export const login = async (email, password) => {
   try {
     const res = await axios.post(
-      "http://localhost:3000/api/v1/users/login",
+      "/api/v1/users/login",
       { email, password },
       { withCredentials: true }
     );
 
     if (res.data.status === "success") {
-      console.log("Logged in");
+      // console.log("Logged in");
 
       showAlert("success", "Logged in successfully!");
       window.setTimeout(() => {
@@ -25,7 +25,7 @@ export const login = async (email, password) => {
 
 export const logout = async () => {
   try {
-    const res = await axios.get("http://localhost:3000/api/v1/users/logout", {
+    const res = await axios.get("/api/v1/users/logout", {
       withCredentials: true,
     });
     if ((res.data.status = "success")) {

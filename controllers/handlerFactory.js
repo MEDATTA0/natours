@@ -116,7 +116,7 @@ export const updateOne = (Model) =>
         new: true,
         runValidators: true,
       });
-      console.log(doc);
+      // console.log(doc);
       if (!doc) {
         return next(new AppError("No document found with that ID!"));
       }

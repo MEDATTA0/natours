@@ -5,6 +5,7 @@ import helmet from "helmet";
 import ExpressMongoSanitize from "express-mongo-sanitize";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import compression from "compression";
 
 import tourRouter from "./routes/tourRoutes.js";
 import userRouter from "./routes/userRoutes.js";
@@ -79,9 +80,11 @@ app.use(
   })
 );
 
+app.use(compression());
+
 // Test middleware
 app.use((req, res, next) => {
-  console.log("Hello from the middleware");
+  // console.log("Hello from the middleware");
   next();
 });
 
