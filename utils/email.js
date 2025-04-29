@@ -13,12 +13,13 @@ export class Email {
 
   newTransport() {
     if (process.env.NODE_ENV === "production") {
-      // Sendgrid
+      // Mailjet
       return nodemailer.createTransport({
-        service: "SendGrid",
+        host: process.env.MAILJET_HOST,
+        port: process.env.MAILJET_PORT,
         auth: {
-          user: process.env.SENDGRID_USERNAME,
-          pass: process.env.SENDGRID_PASSWORD,
+          user: process.env.MAILJET_API_KEY, // API Key is the username
+          pass: process.env.MAILJET_SECRET_KEY, // Secret Key is the password
         },
       });
     }
