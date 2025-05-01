@@ -6,11 +6,13 @@ import {
   getOverview,
   getTour,
   updateUserData,
+  alerts,
 } from "../controllers/viewController.js";
 import { isLoggedIn, protect } from "../controllers/authController.js";
 // import { createBookingCheckout } from "../controllers/bookingController.js";
 
 const router = Router();
+router.use(alerts);
 
 // render static files
 router.get("/" /*createBookingCheckout*/, isLoggedIn, getOverview);
