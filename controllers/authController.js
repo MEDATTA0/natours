@@ -12,17 +12,15 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
-  const cookieOptions = {
+  res.cookie("jwt", token, {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
-  };
-  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
-
-  res.cookie("jwt", token, cookieOptions);
+    secure: req.secure || req.headers("x-forwarded-proto") === "https",
+  });
 
   // Remove password from output
   user.password = undefined;
@@ -55,7 +53,7 @@ export const signup = catchAsync(
 
     try {
       await new Email(newUser, url).sendWelcome();
-      return createSendToken(newUser, 201, res);
+      return createSendToken(newUser, 201, req, res);
     } catch (error) {
       return next(new AppError(error.message, 500));
     }
@@ -85,7 +83,7 @@ export const login = catchAsync(
     }
 
     // 3) If everything ok, send token to client
-    createSendToken(user, 200, res);
+    createSendToken(user, 200, req, res);
   }
 );
 
@@ -276,7 +274,7 @@ export const resetPassword = catchAsync(
 
     // 3) Update changedPasswordAt property for the user
     // 4) Log the user in, send JWT
-    createSendToken(user, 200, res);
+    createSendToken(user, 200, req, res);
   }
 );
 
@@ -306,6 +304,6 @@ export const updatePassword = catchAsync(
     // User.findByIdAndUpdate will NOT work as intended!
 
     // 4) Log user in, send JWT
-    createSendToken(user, 200, res);
+    createSendToken(user, 200, req, res);
   }
 );

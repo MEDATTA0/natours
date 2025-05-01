@@ -20,6 +20,8 @@ import hpp from "hpp";
 
 const app = express();
 
+app.enable("trust proxy");
+
 // Setting the view template
 app.set("view engine", "pug");
 app.set("views", `${process.cwd()}/views`);
