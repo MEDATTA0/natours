@@ -17,6 +17,7 @@ import AppError from "./utils/appError.js";
 import sanitizeMiddleware from "./middlewares/sanitizeMiddleware.js";
 import { globalErrorHandler } from "./controllers/errorController.js";
 import hpp from "hpp";
+import { webhookCheckout } from "./controllers/bookingController.js";
 
 const app = express();
 
@@ -64,6 +65,11 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again in an hour",
 });
 app.use("/api", limiter);
+app.post(
+  "/webhook-checkout",
+  express.raw({ type: "application/json" }),
+  webhookCheckout
+);
 
 // Body parser, reading data from the body into req.body
 app.use(express.json({ limit: "10kb" }));
