@@ -37,8 +37,19 @@ app.use(
 );
 
 // 1) MIDDLEWARES
+app.use(cors());
+// Access-Control-Allow-Origin *
+// api.natours.com, front-end natours.com
+// app.use(
+//   cors({
+//     origin: "https://www.natours.com",
+//   })
+// );
+
+app.options("*", cors());
+// app.options("/api/v1/tours/:id", cors())
+
 // Set security HTTP Headers
-// app.use(helmet());
 app.use(helmet());
 // Development logging
 // eslint-disable-next-line no-undef
@@ -46,7 +57,6 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 // Limit requests from same API
 const limiter = rateLimit({
   limit: 100,
