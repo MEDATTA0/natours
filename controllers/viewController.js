@@ -151,3 +151,18 @@ export const getMyTours = catchAsync(
       .render("overview", { title: "My Tours", tours }); // Changed title
   }
 );
+
+/**
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+export const alerts = (req, res, next) => {
+  const { alert } = req.query;
+  if (alert === "booking")
+    res.locals.alert =
+      "Your booking was successful! Please check your email for a confirmation. If your booking does't show up immediately, please come back later.";
+
+  return next();
+};

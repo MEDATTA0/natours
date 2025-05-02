@@ -17,8 +17,11 @@ import AppError from "./utils/appError.js";
 import sanitizeMiddleware from "./middlewares/sanitizeMiddleware.js";
 import { globalErrorHandler } from "./controllers/errorController.js";
 import hpp from "hpp";
+import { webhookCheckout } from "./controllers/bookingController.js";
 
 const app = express();
+
+app.enable("trust proxy");
 
 // Setting the view template
 app.set("view engine", "pug");
@@ -35,8 +38,19 @@ app.use(
 );
 
 // 1) MIDDLEWARES
+app.use(cors());
+// Access-Control-Allow-Origin *
+// api.natours.com, front-end natours.com
+// app.use(
+//   cors({
+//     origin: "https://www.natours.com",
+//   })
+// );
+
+app.options("*", cors());
+// app.options("/api/v1/tours/:id", cors())
+
 // Set security HTTP Headers
-// app.use(helmet());
 app.use(helmet());
 // Development logging
 // eslint-disable-next-line no-undef
@@ -44,7 +58,6 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 // Limit requests from same API
 const limiter = rateLimit({
   limit: 100,
@@ -52,6 +65,11 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again in an hour",
 });
 app.use("/api", limiter);
+app.post(
+  "/webhook-checkout",
+  express.raw({ type: "application/json" }),
+  webhookCheckout
+);
 
 // Body parser, reading data from the body into req.body
 app.use(express.json({ limit: "10kb" }));

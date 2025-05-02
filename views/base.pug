@@ -15,7 +15,7 @@ html
       link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Lato:300,300i,700&display=swap')
       title Natours | #{title}
 
-  body(data-email=user ? user.email : '') 
+  body(data-alert=`${alert ? alert : ""}`) 
     //- Optional: Add user email as data attribute if needed by client-side JS globally
     // HEADER
     //- Ensure _header.pug exists and contains the header markup
