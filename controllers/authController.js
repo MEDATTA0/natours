@@ -5,6 +5,7 @@ import User from "./../models/userModel.js";
 import catchAsync from "./../utils/catchAsync.js";
 import AppError from "./../utils/appError.js";
 import { Email } from "./../utils/email.js";
+import validator from "validator";
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -12,6 +13,13 @@ const signToken = (id) => {
   });
 };
 
+/**
+ *
+ * @param {import("../models/userModel.js")} user
+ * @param {number} statusCode
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ */
 const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
   res.cookie("jwt", token, {
@@ -19,7 +27,7 @@ const createSendToken = (user, statusCode, req, res) => {
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
-    secure: req.secure || req.headers("x-forwarded-proto") === "https",
+    secure: req.secure || req.headers["x-forwarded-proto"] === "https",
   });
 
   // Remove password from output
@@ -106,7 +114,6 @@ export const protect = catchAsync(async (req, res, next) => {
   } else if (req.cookies.jwt) {
     token = req.cookies.jwt;
   }
-
   if (!token) {
     return next(
       new AppError("You are not logged in! Please log in to get access.", 401)
@@ -114,7 +121,8 @@ export const protect = catchAsync(async (req, res, next) => {
   }
 
   // 2) Verification token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  if (!validator.isJWT(token)) next(new AppError("Invalid token", 401)); // Check if the string is a valid token
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // Decode the token if it is valid
 
   // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
@@ -225,7 +233,7 @@ export const forgotPassword = catchAsync(
       // });
       await new Email(user, resetURL).sendPasswordReset();
 
-      res.status(200).json({
+      return res.status(200).json({
         status: "success",
         message: "Token sent to email!",
       });

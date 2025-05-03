@@ -110,18 +110,20 @@ export const globalErrorHandler = (err, req, res, next) => {
   // console.log(err.message);
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
-  if (process.env.NODE_ENV === "development") {
-    sendErrorDev(err, req, res);
+  let error = {};
+  if (err.name === "CastError") error = handleCastErrorDB(err);
+  else if (err.code === 11000) error = handleDuplicateFieldsDB(err);
+  else if (err.name === "ValidationError") error = handleValidationErrorDB(err);
+  else if (err.name === "JsonWebTokenError") error = handleJWTError();
+  else if (err.name === "TokenExpiredError") error = handleJWTExpiredError();
+  else error = err;
+  if (
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test"
+  ) {
+    sendErrorDev(error, req, res);
   } else if (process.env.NODE_ENV === "production") {
     // let error = { ...err }; error and err don't have the same key:value
-    let error = {};
-    if (err.name === "CastError") error = handleCastErrorDB(err);
-    else if (err.code === 11000) error = handleDuplicateFieldsDB(err);
-    else if (err.name === "ValidationError")
-      error = handleValidationErrorDB(err);
-    else if (err.name === "JsonWebTokenError") error = handleJWTError();
-    else if (err.name === "TokenExpiredError") error = handleJWTExpiredError();
-    else error = err;
     return sendErrorProd(error, req, res);
   }
 };

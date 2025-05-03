@@ -21,7 +21,7 @@ import { webhookCheckout } from "./controllers/bookingController.js";
 
 const app = express();
 
-app.enable("trust proxy");
+if (process.env.NODE_ENV === "production") app.enable("trust proxy");
 
 // Setting the view template
 app.set("view engine", "pug");

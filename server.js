@@ -12,10 +12,16 @@ const DB = process.env.DATABASE.replace(
   "<db_password>",
   process.env.DATABASE_PASSWORD
 );
-mongoose.connect(DB).then((conn) => {
-  // console.log(conn.connections);
+
+try {
+  await mongoose.connect(DB);
   console.log("DB connection successful!");
-});
+  // .then((conn) => {
+  // // console.log(conn.connections);
+  // console.log("DB connection successful!");});
+} catch (err) {
+  console.log("DB connection failed: \n", err);
+}
 
 // START SERVER
 const port = process.env.PORT || 8000;
@@ -38,3 +44,5 @@ process.on("SIGTERM", () => {
     process.exi;
   });
 });
+
+export default server;
