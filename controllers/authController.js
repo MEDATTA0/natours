@@ -33,7 +33,7 @@ const createSendToken = (user, statusCode, req, res) => {
   // Remove password from output
   user.password = undefined;
 
-  res.status(statusCode).json({
+  return res.status(statusCode).json({
     status: "success",
     token,
     data: {
@@ -91,16 +91,31 @@ export const login = catchAsync(
     }
 
     // 3) If everything ok, send token to client
-    createSendToken(user, 200, req, res);
+    return createSendToken(user, 200, req, res);
   }
 );
 
+/**
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @returns
+ */
 export const logout = (req, res) => {
-  res.cookie("jwt", "loggedout", {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true,
-  });
-  return res.status(200).json({ status: "success" });
+  // Method 1: Create a malformed cookie with short lifetime
+  // res.cookie("jwt", "loggedout", {
+  //   expires: new Date(Date.now() + 10 * 1000),
+  //   httpOnly: true,
+  // });
+
+  // Method 2: Clear the cookie
+  return res
+    .status(200)
+    .clearCookie("jwt", {
+      httpOnly: true,
+      secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+    })
+    .json({ status: "success" });
 };
 
 export const protect = catchAsync(async (req, res, next) => {
@@ -121,8 +136,11 @@ export const protect = catchAsync(async (req, res, next) => {
   }
 
   // 2) Verification token
-  if (!validator.isJWT(token)) next(new AppError("Invalid token", 401)); // Check if the string is a valid token
+  if (!validator.isJWT(token)) return next(new AppError("Invalid token", 401)); // Check if the string is a valid token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // Decode the token if it is valid
+
+  if (!validator.isMongoId(decoded.id))
+    return next(new AppError("Invalid token", 401));
 
   // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
@@ -236,6 +254,7 @@ export const forgotPassword = catchAsync(
       return res.status(200).json({
         status: "success",
         message: "Token sent to email!",
+        ...(process.env.NODE_ENV === "test" && { resetURL }),
       });
     } catch (err) {
       user.passwordResetToken = undefined;
@@ -260,6 +279,9 @@ export const resetPassword = catchAsync(
    */
   async (req, res, next) => {
     // 1) Get user based on the token
+    if (!validator.isHexadecimal(req.params.token))
+      return next(new AppError("Token is invalid or has expired", 400));
+
     const hashedToken = crypto
       .createHash("sha256")
       .update(req.params.token)
@@ -282,7 +304,7 @@ export const resetPassword = catchAsync(
 
     // 3) Update changedPasswordAt property for the user
     // 4) Log the user in, send JWT
-    createSendToken(user, 200, req, res);
+    return createSendToken(user, 200, req, res);
   }
 );
 
@@ -312,6 +334,6 @@ export const updatePassword = catchAsync(
     // User.findByIdAndUpdate will NOT work as intended!
 
     // 4) Log user in, send JWT
-    createSendToken(user, 200, req, res);
+    return createSendToken(user, 200, req, res);
   }
 );

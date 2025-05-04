@@ -23,6 +23,7 @@ import {
 } from "../controllers/authController.js";
 import {
   validateLogin,
+  validateResetPassword,
   validateSignup,
 } from "../middlewares/authMiddleware.js";
 
@@ -32,7 +33,7 @@ router.post("/signup", validateSignup, signup);
 router.post("/login", validateLogin, login);
 router.get("/logout", protect, logout);
 router.post("/forgotPassword", forgotPassword);
-router.patch("/resetPassword/:token", resetPassword);
+router.patch("/resetPassword/:token", validateResetPassword, resetPassword);
 
 // Protect all routes after this middleware
 router.use(protect);

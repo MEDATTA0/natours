@@ -13,8 +13,19 @@ export const authValidator = {
     email: Joi.string().email().required().label("email"),
     password: Joi.string().min(8).required().label("password"),
     passwordConfirm: Joi.string()
-      .valid(Joi.ref("password"))
       .required()
+      .valid(Joi.ref("password"))
+      .label("passwordConfirm")
+      .messages({ "any.only": '"passwordConfirm" does not match "password"' }),
+  })
+    .unknown(false)
+    .messages({ "any.unknown": "{{#label}} field is not allowed" }),
+
+  resetPassword: Joi.object({
+    password: Joi.string().required().label("password"),
+    passwordConfirm: Joi.string()
+      .required()
+      .valid(Joi.ref("password"))
       .label("passwordConfirm")
       .messages({ "any.only": '"passwordConfirm" does not match "password"' }),
   })
